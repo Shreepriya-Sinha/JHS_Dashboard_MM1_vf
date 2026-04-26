@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>JHS Admin Portal</title>
+<style>
+:root{
+  --bg:#f0f4f8;--card:#fff;--pri:#1a3c6e;--text:#1e2d3d;--mut:#6b7c93;--bdr:#dde3ec;
+  --shd:0 2px 14px rgba(26,60,110,.10);--acc:#7b2ff7;--grn:#16a34a;--red:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+/* PASSWORD */
+#pw-gate{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0f1e3a 0%,#1a3c6e 60%,#2a1a5e 100%);display:flex;align-items:center;justify-content:center;}
+#pw-box{background:#fff;border-radius:18px;padding:40px 36px 36px;width:380px;box-shadow:0 8px 48px rgba(0,0,0,.45);text-align:center;}
+.pw-logo{font-size:22px;font-weight:900;letter-spacing:1px;color:#1a3c6e;margin-bottom:4px;}
+.pw-logo span{color:#f4a231;}
+.pw-sub{font-size:12px;color:#6b7c93;margin-bottom:28px;}
+.pw-lbl{font-size:11px;font-weight:700;color:#6b7c93;text-transform:uppercase;letter-spacing:.5px;text-align:left;margin-bottom:6px;}
+#pw-input{width:100%;border:2px solid #dde3ec;border-radius:8px;padding:10px 14px;font-size:15px;letter-spacing:2px;color:#1e2d3d;outline:none;transition:border .2s;text-align:center;}
+#pw-input:focus{border-color:#1a3c6e;}
+#pw-input.err{border-color:#dc2626;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+#pw-btn{margin-top:16px;width:100%;background:linear-gradient(90deg,#1a3c6e,#7b2ff7);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+#pw-btn:hover{opacity:.88;}
+#pw-err{margin-top:10px;font-size:12px;color:#dc2626;min-height:16px;}
+/* HEADER */
+.hdr{background:var(--pri);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+.hdr-logo{font-size:20px;font-weight:800;letter-spacing:1px;}
+.hdr-logo span{color:#f4a231;}
+.hdr-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#fde68a;}
+/* MAIN */
+.main{max-width:960px;margin:24px auto;padding:0 18px;}
+/* STEPS */
+.steps{display:flex;margin-bottom:24px;border-radius:12px;overflow:hidden;box-shadow:var(--shd);}
+.step{flex:1;text-align:center;padding:14px 6px;background:var(--card);border-top:3px solid var(--bdr);font-size:11px;font-weight:600;color:var(--mut);}
+.step.done{border-top-color:var(--grn);color:var(--grn);background:#f0fdf4;}
+.step.active{border-top-color:var(--acc);color:var(--acc);background:#f5f0ff;}
+.step-num{display:block;font-size:19px;font-weight:900;margin-bottom:2px;}
+/* CARDS */
+.card{background:var(--card);border-radius:14px;padding:22px;box-shadow:var(--shd);margin-bottom:18px;}
+.card-title{font-size:15px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.card-sub{font-size:12px;color:var(--mut);margin-bottom:16px;}
+/* UPLOAD ZONE */
+.uz{border:2px dashed var(--bdr);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#fafbfd;}
+.uz:hover,.uz.drag{border-color:var(--acc);background:#f5f0ff;}
+.uz.success{border-color:var(--grn);background:#f0fdf4;}
+.uz-icon{font-size:38px;margin-bottom:8px;}
+.uz-title{font-size:14px;font-weight:700;margin-bottom:3px;}
+.uz-sub{font-size:11px;color:var(--mut);}
+.uz-file{font-size:12px;font-weight:700;color:var(--grn);margin-top:6px;}
+#file-input{display:none;}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;}
+.btn-pri{background:linear-gradient(90deg,#1a3c6e,#7b2ff7);color:#fff;}
+.btn-pri:hover{opacity:.88;}
+.btn-grn{background:linear-gradient(90deg,#16a34a,#059669);color:#fff;}
+.btn-grn:hover{opacity:.88;}
+.btn-grn:disabled{opacity:.45;cursor:not-allowed;}
+.btn-tmpl{background:#f0f4ff;border:1.5px solid #a5b4fc;color:#4338ca;}
+.btn-tmpl:hover{background:#e0e7ff;}
+/* STATUS */
+.sb{border-radius:8px;padding:11px 15px;font-size:12px;font-weight:600;margin-bottom:14px;}
+.sb.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+.sb.ok{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
+.sb.err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
+/* STATS ROW */
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.stat{background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:9px 15px;font-size:11px;}
+.stat-val{font-size:20px;font-weight:800;color:var(--pri);}
+.stat-lbl{color:var(--mut);}
+/* PREVIEW TABS */
+.ptabs{display:flex;gap:0;border-bottom:2px solid var(--bdr);margin-bottom:14px;}
+.ptab{padding:8px 18px;font-size:12px;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;}
+.ptab.on{color:var(--acc);border-bottom-color:var(--acc);}
+/* TABLE */
+.tw{overflow-x:auto;max-height:270px;overflow-y:auto;border-radius:8px;border:1px solid var(--bdr);}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+thead th{background:var(--pri);color:#fff;padding:7px 10px;text-align:left;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:1;}
+tbody tr{border-bottom:1px solid var(--bdr);}
+tbody tr:hover{background:#f4f8ff;}
+tbody td{padding:6px 10px;white-space:nowrap;}
+/* INSTRUCTIONS */
+.instr{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-top:14px;}
+.instr-title{font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;}
+.instr ol{padding-left:18px;}
+.instr li{font-size:12px;color:#78350f;margin-bottom:5px;line-height:1.6;}
+.instr code{background:#fef3c7;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.gh-lbl{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.gh-inp{width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);background:#fafbfd;outline:none;transition:border .2s;}
+.gh-inp:focus{border-color:var(--acc);}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+  <div id="pw-box">
+    <div style="font-size:38px;margin-bottom:10px;">🛡️</div>
+    <div class="pw-logo">JIO<span>HOTSTAR</span></div>
+    <div class="pw-sub">Admin Portal — Authorized Access Only</div>
+    <div class="pw-lbl">Admin Password</div>
+    <input id="pw-input" type="password" placeholder="••••••••" maxlength="30" autocomplete="off" onkeydown="if(event.key==='Enter')pwCheck()"/>
+    <button id="pw-btn" onclick="pwCheck()">Enter Admin Portal</button>
+    <div id="pw-err"></div>
+  </div>
+</div>
+
+<div id="admin-ui" style="display:none">
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-logo">JIO<span>HOTSTAR</span> Admin Portal</div>
+    <div style="font-size:11px;color:#aac4e8;margin-top:2px;">Dashboard Data Management</div>
+  </div>
+  <div class="hdr-badge">🛡️ Admin Mode</div>
+</div>
+
+<div class="main">
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="s1"><span class="step-num">1</span>Download Template</div>
+    <div class="step" id="s2"><span class="step-num">2</span>Upload Excel</div>
+    <div class="step" id="s3"><span class="step-num">3</span>Preview Data</div>
+    <div class="step" id="s4"><span class="step-num">4</span>Generate Dashboard</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="card">
+    <div class="card-title">📥 Step 1 — Download Excel Template</div>
+    <div class="card-sub">Download and fill this template with your latest sales data. It has 3 sheets matching the dashboard exactly.</div>
+    <div class="row">
+      <button class="btn btn-tmpl" onclick="downloadLiveData()">⬇️ Download Current Dashboard Data.xlsx</button>
+      <span style="font-size:11px;color:var(--mut);">Always downloads latest data from your live GitHub dashboard</span>
+    </div>
+    <div class="instr">
+      <div class="instr-title">📋 Sheet Structure — What to Fill</div>
+      <ol>
+        <li><strong>Sheet 1 "SOW Data":</strong> <code>Period</code> <code>RH</code> <code>AD</code> <code>EM</code> <code>YT</code> <code>TV</code> <code>JHS</code> <code>SOW%</code> — Enter SOW as percentage e.g. <code>7.57</code> (not 0.0757)</li>
+        <li><strong>Sheet 2 "Activation Data":</strong> <code>EM</code> <code>Total</code> <code>JHS_Active</code> <code>YT_Active</code> <code>JHS_of_YT</code> <code>TV_Active</code> <code>JHS_of_TV</code> <code>Top5_YT_notJHS</code> <code>Top5_TV_notJHS</code> — Top5 columns are comma-separated client names</li>
+        <li><strong>Sheet 3 "Client Data":</strong> <code>EM</code> <code>RH</code> <code>AD</code> <code>Client_Name</code> <code>Adex</code> <code>SOW%</code> — One row per client. SOW% as percentage.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="card-title">📤 Step 2 — Upload Your Filled Excel</div>
+    <div class="card-sub">Upload the Excel file you filled with the latest data (.xlsx or .xls)</div>
+    <div class="uz" id="uz" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+      <div class="uz-icon" id="uz-icon">📊</div>
+      <div class="uz-title">Click to browse or drag & drop your Excel here</div>
+      <div class="uz-sub">Supports .xlsx and .xls formats</div>
+      <div class="uz-file" id="uz-file"></div>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(this.files[0])"/>
+  </div>
+
+  <!-- STEP 3: PREVIEW (hidden until parsed) -->
+  <div class="card" id="preview-card" style="display:none">
+    <div class="card-title">👁️ Step 3 — Preview Parsed Data</div>
+    <div class="card-sub">Verify the data looks correct before generating the dashboard.</div>
+    <div id="parse-status"></div>
+    <div class="stats" id="stats-row"></div>
+    <div class="ptabs">
+      <div class="ptab on" onclick="showTab('sow',this)">SOW Data</div>
+      <div class="ptab" onclick="showTab('act',this)">Activation Data</div>
+      <div class="ptab" onclick="showTab('cli',this)">Client Data</div>
+    </div>
+    <div id="pt-sow"><div class="tw"><table id="tbl-sow"></table></div></div>
+    <div id="pt-act" style="display:none"><div class="tw"><table id="tbl-act"></table></div></div>
+    <div id="pt-cli" style="display:none"><div class="tw"><table id="tbl-cli"></table></div></div>
+  </div>
+
+  <!-- STEP 4: PUSH TO GITHUB -->
+  <div class="card" id="generate-card" style="display:none">
+    <div class="card-title">🚀 Step 4 — Push to GitHub Automatically</div>
+    <div class="card-sub">Enter your GitHub details once — the dashboard updates itself with one click, no manual upload needed.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div>
+        <div class="gh-lbl">GitHub Username</div>
+        <input class="gh-inp" id="gh-user" placeholder="e.g. johndoe" oninput="saveGHSettings()"/>
+      </div>
+      <div>
+        <div class="gh-lbl">Repository Name</div>
+        <input class="gh-inp" id="gh-repo" placeholder="e.g. jiohotstar-dashboard" oninput="saveGHSettings()"/>
+      </div>
+      <div>
+        <div class="gh-lbl">Branch</div>
+        <input class="gh-inp" id="gh-branch" placeholder="main" value="main" oninput="saveGHSettings()"/>
+      </div>
+      <div>
+        <div class="gh-lbl">Personal Access Token &nbsp;<a href="https://github.com/settings/tokens/new?scopes=repo&description=JHS+Admin" target="_blank" style="font-size:10px;color:#7b2ff7;font-weight:600;">Create one ↗</a></div>
+        <input class="gh-inp" id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxx" oninput="saveGHSettings()"/>
+      </div>
+    </div>
+
+    <div id="gen-status"></div>
+
+    <div id="progress-wrap" style="display:none;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--mut);margin-bottom:6px;">
+        <span id="prog-label">Connecting...</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div style="background:#e9ecef;border-radius:20px;height:8px;overflow:hidden;">
+        <div id="prog-bar" style="height:8px;border-radius:20px;background:linear-gradient(90deg,#1a3c6e,#7b2ff7);width:0%;transition:width .4s ease;"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn btn-grn" id="push-btn" onclick="pushToGitHub()">⚡ Push to GitHub Now</button>
+      <button class="btn" style="background:#f0f4ff;border:1.5px solid #a5b4fc;color:#4338ca;" onclick="downloadOnly()">⬇️ Download Only (Fallback)</button>
+    </div>
+
+    <div class="instr" style="margin-top:14px;">
+      <div class="instr-title">🔑 One-time Setup — How to get your Token</div>
+      <ol>
+        <li>Click <strong>"Create one ↗"</strong> above — it opens GitHub token page with correct settings pre-filled</li>
+        <li>Select <strong>Token (classic)</strong>, make sure <code>repo</code> checkbox is ticked, click <strong>Generate token</strong></li>
+        <li>Copy the token and paste above — it saves in your browser automatically</li>
+        <li>Your token never leaves your browser — it only talks directly to GitHub's official API</li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+</div><!-- /admin-ui -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ─── PASSWORD ─────────────────────────────────────────────
+const ADMIN_PW = 'ADMIN@JHS';
+function pwCheck(){
+  const v = document.getElementById('pw-input').value;
+  if(v === ADMIN_PW){
+    document.getElementById('pw-gate').style.display = 'none';
+    document.getElementById('admin-ui').style.display = 'block';
+  } else {
+    const inp = document.getElementById('pw-input');
+    inp.style.animation = 'shake .3s ease';
+    inp.classList.add('err');
+    document.getElementById('pw-err').textContent = 'Incorrect password. Try again.';
+    inp.value = '';
+    setTimeout(()=>{ inp.classList.remove('err'); inp.style.animation = ''; }, 400);
+  }
+}
+
+// ─── PARSED DATA ──────────────────────────────────────────
+let pSOW = [], pACT = [], pCLI = [];
+
+// ─── DRAG & DROP ──────────────────────────────────────────
+function dragOver(e){ e.preventDefault(); document.getElementById('uz').classList.add('drag'); }
+function dragLeave(){ document.getElementById('uz').classList.remove('drag'); }
+function dropFile(e){
+  e.preventDefault();
+  document.getElementById('uz').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if(f) handleFile(f);
+}
+
+// ─── FILE HANDLER ─────────────────────────────────────────
+function handleFile(file){
+  if(!file) return;
+  document.getElementById('uz-file').textContent = '📂 ' + file.name;
+  document.getElementById('uz').classList.add('success');
+  document.getElementById('uz-icon').textContent = '✅';
+  setStep(2);
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      parseWB(wb);
+    } catch(err){
+      showSB('parse-status','err','❌ Could not read file: ' + err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ─── PARSE ────────────────────────────────────────────────
+function parseWB(wb){
+  const sn = wb.SheetNames;
+  const findSheet = (...keys) => {
+    const name = sn.find(n => keys.some(k => n.toLowerCase().includes(k)));
+    return name ? wb.Sheets[name] : wb.Sheets[sn[keys[0]==='sow'?0:keys[0]==='act'?1:2]];
+  };
+  const sowSheet = findSheet('sow');
+  const actSheet = findSheet('act','activ');
+  const cliSheet = findSheet('cli','client');
+
+  const g = (r, ...keys) => {
+    for(const k of keys){
+      for(const rk of Object.keys(r)){
+        if(rk.toLowerCase().replace(/[^a-z0-9]/g,'')===k.toLowerCase().replace(/[^a-z0-9]/g,''))
+          if(r[rk]!==undefined && r[rk]!=='') return r[rk];
+      }
+    }
+    return '';
+  };
+
+  if(sowSheet){
+    pSOW = XLSX.utils.sheet_to_json(sowSheet, {defval:''}).map(r => ({
+      p:   String(g(r,'period','timeperiod','Period','Time period') || "FY'26"),
+      rh:  String(g(r,'RH','rh') || ''),
+      ad:  String(g(r,'AD','ad') || ''),
+      em:  String(g(r,'EM','em') || ''),
+      yt:  +(parseFloat(g(r,'YT','yt')) || 0).toFixed(2),
+      tv:  +(parseFloat(g(r,'TV','tv')) || 0).toFixed(2),
+      jhs: +(parseFloat(g(r,'JHS','jhs')) || 0).toFixed(2),
+      sow: +((parseFloat(g(r,'SOW%','SOW','sow')) || 0)/100).toFixed(6),
+    })).filter(r => r.em && r.em!=='undefined');
+  }
+
+  if(actSheet){
+    pACT = XLSX.utils.sheet_to_json(actSheet, {defval:''}).map(r => ({
+      p:   String(g(r,'period','timeperiod','Period','Time period') || "FY'26"),
+      em:  String(g(r,'EM','em') || ''),
+      tot: parseInt(g(r,'Total','total','Totalclients')) || 0,
+      ja:  parseInt(g(r,'JHSActive','JHS_Active','JHS Active','TotalJHSactive')) || 0,
+      ya:  parseInt(g(r,'YTActive','YT_Active','YT Active')) || 0,
+      jy:  parseInt(g(r,'JHSofYT','JHS_of_YT','JHS of YT','JHSactiveoutofYTactive')) || 0,
+      t5y: String(g(r,'Top5YTnotJHS','Top5_YT_notJHS','Top5 YT notJHS','Top5clientswhichareactiveonYTandnotJHS') || ''),
+      ta:  parseInt(g(r,'TVActive','TV_Active','TV Active')) || 0,
+      jt:  parseInt(g(r,'JHSofTV','JHS_of_TV','JHS of TV','JHSactiveoutofTVactive')) || 0,
+      t5t: String(g(r,'Top5TVnotJHS','Top5_TV_notJHS','Top5 TV notJHS','Top5clientswhichareactiveonTVandnotJHS') || ''),
+    })).filter(r => r.em && r.em!=='undefined');
+  }
+
+  if(cliSheet){
+    pCLI = XLSX.utils.sheet_to_json(cliSheet, {defval:''}).map(r => ({
+      p:    String(g(r,'period','timeperiod','Period','Time period') || "FY'26"),
+      n:    String(g(r,'ClientName','Client_Name','Client Name','Advertiser','AdvertiserDonotEdit','n') || ''),
+      em:   String(g(r,'EM','em') || ''),
+      rh:   String(g(r,'RH','rh') || ''),
+      ad:   String(g(r,'AD','ad') || ''),
+      yt:   +(parseFloat(g(r,'YT','yt')) || 0).toFixed(2),
+      tv:   +(parseFloat(g(r,'TV','tv')) || 0).toFixed(2),
+      jhs:  +(parseFloat(g(r,'JHS','jhs')) || 0).toFixed(2),
+      adex: +(parseFloat(g(r,'Adex','adex','ADEX')) || 0).toFixed(2),
+      sow:  +((parseFloat(g(r,'SOW%','SOW','sow')) || 0)/100).toFixed(6),
+    })).filter(r => r.n && r.n!=='undefined');
+  }
+
+  // Show preview
+  document.getElementById('preview-card').style.display = 'block';
+  const ok = pSOW.length > 0 && pACT.length > 0 && pCLI.length > 0;
+
+  // Periods found
+  const periods = [...new Set([...pSOW.map(d=>d.p), ...pACT.map(d=>d.p), ...pCLI.map(d=>d.p)])].sort();
+
+  if(ok){
+    showSB('parse-status','ok',`✅ Parsed successfully — ${pSOW.length} SOW rows · ${pACT.length} EM activation rows · ${pCLI.length} client records · Periods: ${periods.join(', ')}`);
+  } else {
+    showSB('parse-status','err','⚠️ Some sheets may be empty or named differently. Expected sheet names: "SOW Data", "Activation Data", "Client Data"');
+  }
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat"><div class="stat-val">${pSOW.length}</div><div class="stat-lbl">SOW Rows</div></div>
+    <div class="stat"><div class="stat-val">${pACT.length}</div><div class="stat-lbl">EMs (Activation)</div></div>
+    <div class="stat"><div class="stat-val">${pCLI.length}</div><div class="stat-lbl">Client Records</div></div>
+    <div class="stat"><div class="stat-val">${periods.length}</div><div class="stat-lbl">Period(s)</div></div>
+    <div class="stat"><div class="stat-val">${new Set(pSOW.map(d=>d.em)).size}</div><div class="stat-lbl">EM Count</div></div>
+  `;
+
+  renderTbl('tbl-sow', pSOW, ['p','rh','ad','em','yt','tv','jhs','sow']);
+  renderTbl('tbl-act', pACT, ['p','em','tot','ja','ya','jy','ta','jt','t5y','t5t']);
+  renderTbl('tbl-cli', pCLI, ['p','n','em','rh','ad','adex','sow']);
+
+  setStep(3);
+  document.getElementById('generate-card').style.display = 'block';
+}
+
+// ─── RENDER TABLE ─────────────────────────────────────────
+function renderTbl(id, data, cols){
+  const tbl = document.getElementById(id);
+  if(!data.length){ tbl.innerHTML = '<tr><td style="padding:20px;color:#999;text-align:center">No data found</td></tr>'; return; }
+  const hdr = cols.map(c=>`<th>${c}</th>`).join('');
+  const rows = data.slice(0,80).map(row=>{
+    const cells = cols.map(c=>{
+      let v = row[c];
+      if(c==='sow') v = (v*100).toFixed(2)+'%';
+      else if(typeof v === 'number') v = v;
+      return `<td>${v??''}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+  tbl.innerHTML = `<thead><tr>${hdr}</tr></thead><tbody>${rows}</tbody>`;
+  if(data.length>80) tbl.innerHTML += `<tr><td colspan="${cols.length}" style="text-align:center;padding:8px;color:#999;font-size:10px">...and ${data.length-80} more rows</td></tr>`;
+}
+
+// ─── PREVIEW TABS ─────────────────────────────────────────
+function showTab(id, btn){
+  ['sow','act','cli'].forEach(t => document.getElementById('pt-'+t).style.display = t===id?'block':'none');
+  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ─── BUILD UPDATED HTML ───────────────────────────────────
+function buildUpdatedHTML(original) {
+  // Build SOW as compact JS object notation (matches dashboard format)
+  const sowEntries = pSOW.map(d =>
+    `{rh:"${d.rh}",ad:"${d.ad}",em:"${d.em}",yt:${d.yt},tv:${d.tv},jhs:${d.jhs},sow:${d.sow},p:"${d.p}"}`
+  ).join(',\n  ');
+  const sowStr = `const SOWDATA=[\n  ${sowEntries}\n];`;
+
+  const actEntries = pACT.map(d =>
+    `{em:"${d.em}",tot:${d.tot},ja:${d.ja},ya:${d.ya},jy:${d.jy},t5y:"${(d.t5y||'').replace(/"/g,"'")}",ta:${d.ta},jt:${d.jt},t5t:"${(d.t5t||'').replace(/"/g,"'")}",p:"${d.p}"}`
+  ).join(',\n  ');
+  const actStr = `const ACTDATA=[\n  ${actEntries}\n];`;
+
+  // CDATA stays as JSON (it's already JSON in the dashboard)
+  const cliStr = 'const CDATA=' + JSON.stringify(pCLI) + ';';
+
+  let html = original;
+  html = html.replace(/const SOWDATA\s*=\s*\[[\s\S]*?\];/, sowStr);
+  html = html.replace(/const ACTDATA\s*=\s*\[[\s\S]*?\];/, actStr);
+  html = html.replace(/const CDATA\s*=\s*\[[\s\S]*?\];/,   cliStr);
+
+  // Verify replacements worked
+  if(!html.includes('const SOWDATA=[')) throw new Error('SOWDATA replacement failed — dashboard structure may have changed.');
+  return html;
+}
+
+// ─── PROGRESS HELPER ──────────────────────────────────────
+function setProgress(pct, label) {
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-label').textContent = label;
+}
+
+// ─── PUSH TO GITHUB ───────────────────────────────────────
+async function pushToGitHub() {
+  const user   = document.getElementById('gh-user').value.trim();
+  const repo   = document.getElementById('gh-repo').value.trim();
+  const branch = document.getElementById('gh-branch').value.trim() || 'main';
+  const token  = document.getElementById('gh-token').value.trim();
+
+  if(!user || !repo || !token) {
+    showSB('gen-status','err','❌ Please fill in GitHub Username, Repository Name, and Token.');
+    return;
+  }
+
+  const btn = document.getElementById('push-btn');
+  btn.disabled = true; btn.textContent = '⏳ Pushing...';
+  document.getElementById('gen-status').innerHTML = '';
+
+  const API = `https://api.github.com/repos/${user}/${repo}/contents/index.html`;
+  const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+
+  try {
+    // Step 1: Fetch current file from GitHub API
+    setProgress(20, '📡 Fetching current index.html from GitHub...');
+    const getResp = await fetch(`${API}?ref=${branch}`, { headers });
+    if(getResp.status === 401) throw new Error('Token is invalid or expired. Please create a new token.');
+    if(getResp.status === 404) throw new Error(`File not found. Check username "${user}", repo "${repo}", branch "${branch}" — and make sure index.html exists.`);
+    if(!getResp.ok) throw new Error(`GitHub API error: ${getResp.status} ${getResp.statusText}`);
+
+    const fileData = await getResp.json();
+    const sha = fileData.sha;
+
+    // Step 2: Decode & rebuild
+    setProgress(50, '🔧 Embedding new data into dashboard...');
+    const originalHTML = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g,''))));
+    const updatedHTML  = buildUpdatedHTML(originalHTML);
+
+    if(updatedHTML === originalHTML) {
+      throw new Error('Could not find SOWDATA in the fetched file. Check that index.html has the expected structure.');
+    }
+
+    // Step 3: Encode & push
+    setProgress(75, '🚀 Pushing updated file to GitHub...');
+    const encoded = btoa(unescape(encodeURIComponent(updatedHTML)));
+    const now = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+
+    const putResp = await fetch(API, {
+      method: 'PUT', headers,
+      body: JSON.stringify({
+        message: `Dashboard data updated — ${now} (IST)`,
+        content: encoded,
+        sha: sha,
+        branch: branch
+      })
+    });
+
+    if(!putResp.ok) {
+      const err = await putResp.json();
+      throw new Error(`Push failed: ${err.message}`);
+    }
+
+    setProgress(100, '✅ Successfully pushed to GitHub!');
+    showSB('gen-status','ok',`✅ Done! Dashboard updated on GitHub. It will go live at <strong>https://${user}.github.io/${repo}/</strong> in about 1 minute.`);
+    setStep(4);
+    btn.textContent = '✅ Pushed to GitHub!';
+
+  } catch(err) {
+    setProgress(0, '');
+    document.getElementById('progress-wrap').style.display = 'none';
+    showSB('gen-status','err','❌ ' + err.message);
+    btn.disabled = false; btn.textContent = '⚡ Push to GitHub Now';
+  }
+}
+
+// ─── DOWNLOAD ONLY (FALLBACK) ─────────────────────────────
+async function downloadOnly() {
+  try {
+    const user  = document.getElementById('gh-user').value.trim();
+    const repo  = document.getElementById('gh-repo').value.trim();
+    const branch= document.getElementById('gh-branch').value.trim() || 'main';
+    const token = document.getElementById('gh-token').value.trim();
+
+    let html;
+    if(user && repo && token) {
+      // Try to get from GitHub
+      const API = `https://api.github.com/repos/${user}/${repo}/contents/index.html?ref=${branch}`;
+      const r = await fetch(API, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }});
+      if(r.ok) {
+        const d = await r.json();
+        html = buildUpdatedHTML(decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))));
+      }
+    }
+    if(!html) {
+      // Last resort: try same-origin fetch
+      const r2 = await fetch('index.html', {cache:'no-store'});
+      if(r2.ok) html = buildUpdatedHTML(await r2.text());
+    }
+    if(!html) throw new Error('Could not fetch index.html. Fill in GitHub credentials to download via API.');
+
+    const blob = new Blob([html], {type:'text/html'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'index.html'; a.click();
+    URL.revokeObjectURL(url);
+    showSB('gen-status','ok','✅ Downloaded! Upload this file to GitHub manually to update the dashboard.');
+  } catch(err) {
+    showSB('gen-status','err','❌ ' + err.message);
+  }
+}
+
+// ─── SAVE / LOAD GITHUB SETTINGS ─────────────────────────
+function saveGHSettings() {
+  localStorage.setItem('jhs_gh', JSON.stringify({
+    user:   document.getElementById('gh-user').value,
+    repo:   document.getElementById('gh-repo').value,
+    branch: document.getElementById('gh-branch').value,
+    token:  document.getElementById('gh-token').value,
+  }));
+}
+function loadGHSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('jhs_gh')||'null');
+    document.getElementById('gh-user').value   = s?.user   || 'Shreepriya-Sinha';
+    document.getElementById('gh-repo').value   = s?.repo   || 'JHS_Dasboard_MM1_vF';
+    document.getElementById('gh-branch').value = s?.branch || 'main';
+    document.getElementById('gh-token').value  = s?.token  || '';
+  } catch(e){
+    document.getElementById('gh-user').value  = 'Shreepriya-Sinha';
+    document.getElementById('gh-repo').value  = 'JHS_Dasboard_MM1_vF';
+    document.getElementById('gh-branch').value= 'main';
+  }
+}
+
+// ─── DOWNLOAD LIVE DATA FROM GITHUB ──────────────────────
+async function downloadLiveData(){
+  const user   = document.getElementById('gh-user').value.trim();
+  const repo   = document.getElementById('gh-repo').value.trim();
+  const branch = document.getElementById('gh-branch').value.trim() || 'main';
+  const token  = document.getElementById('gh-token').value.trim();
+
+  const btn = event.target;
+  const origText = btn.textContent;
+  btn.textContent = '⏳ Fetching live data...';
+  btn.disabled = true;
+
+  try {
+    let html = null;
+
+    // Try GitHub API first if credentials available
+    if(user && repo && token) {
+      const API = `https://api.github.com/repos/${user}/${repo}/contents/index.html?ref=${branch}`;
+      const r = await fetch(API, {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+      if(r.ok) {
+        const d = await r.json();
+        html = decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+      }
+    }
+    // Fallback: same-origin fetch
+    if(!html) {
+      const r2 = await fetch('index.html', {cache:'no-store'});
+      if(r2.ok) html = await r2.text();
+    }
+
+    if(!html) throw new Error('Could not fetch index.html. Enter GitHub credentials above first.');
+
+    // Parse data from HTML
+    function parseJSArr(raw) {
+      const rows = [];
+      const objRe = /\{([^}]+)\}/g;
+      const kvRe = /(\w+)\s*:\s*("(?:[^"\\]|\\.)*"|-?\d+\.?\d*)/g;
+      let m;
+      while((m = objRe.exec(raw)) !== null) {
+        const row = {};
+        let kv;
+        while((kv = kvRe.exec(m[1])) !== null) {
+          const v = kv[2];
+          row[kv[1]] = v.startsWith('"') ? v.slice(1,-1) : (v.includes('.')?parseFloat(v):parseInt(v));
+        }
+        if(Object.keys(row).length) rows.push(row);
+      }
+      return rows;
+    }
+
+    const sowRaw = html.match(/const SOWDATA=(\[[\s\S]*?\]);/)?.[1] || '[]';
+    const actRaw = html.match(/const ACTDATA=(\[[\s\S]*?\]);/)?.[1] || '[]';
+    const cliRaw = html.match(/const CDATA=(\[[\s\S]*?\]);/)?.[1] || '[]';
+
+    const SOW = parseJSArr(sowRaw);
+    const ACT = parseJSArr(actRaw);
+    const CLI = JSON.parse(cliRaw);
+
+    if(!SOW.length || !ACT.length || !CLI.length)
+      throw new Error('Could not parse data from index.html. Check file structure.');
+
+    const wb = XLSX.utils.book_new();
+
+    // ── SOW Data ──
+    const sowRows = [['Period','RH','AD','EM','YT','TV','JHS','SOW%']];
+    SOW.forEach(r => sowRows.push([r.p, r.rh, r.ad, r.em, r.yt, r.tv, r.jhs, +(r.sow*100).toFixed(4)]));
+    const sowWS = XLSX.utils.aoa_to_sheet(sowRows);
+    sowWS['!cols'] = [{wch:9},{wch:22},{wch:24},{wch:26},{wch:8},{wch:8},{wch:8},{wch:8}];
+    XLSX.utils.book_append_sheet(wb, sowWS, 'SOW Data');
+
+    // ── Activation Data ──
+    const actRows = [['Period','EM','Total','JHS_Active','YT_Active','JHS_of_YT','Top5_YT_notJHS','TV_Active','JHS_of_TV','Top5_TV_notJHS']];
+    ACT.forEach(r => actRows.push([r.p||"FY'26", r.em, r.tot, r.ja, r.ya, r.jy, r.t5y||'', r.ta, r.jt, r.t5t||'']));
+    const actWS = XLSX.utils.aoa_to_sheet(actRows);
+    actWS['!cols'] = [{wch:9},{wch:26},{wch:7},{wch:11},{wch:10},{wch:10},{wch:55},{wch:10},{wch:10},{wch:55}];
+    XLSX.utils.book_append_sheet(wb, actWS, 'Activation Data');
+
+    // ── Client Data ──
+    const cliRows = [['Period','EM','RH','AD','Client_Name','YT','TV','JHS','Adex','SOW%']];
+    CLI.forEach(r => cliRows.push([r.p||"FY'26", r.em, r.rh, r.ad, r.n, r.yt||0, r.tv||0, r.jhs||0, r.adex, +(r.sow*100).toFixed(4)]));
+    const cliWS = XLSX.utils.aoa_to_sheet(cliRows);
+    cliWS['!cols'] = [{wch:9},{wch:26},{wch:22},{wch:24},{wch:50},{wch:8},{wch:8},{wch:8},{wch:10},{wch:8}];
+    XLSX.utils.book_append_sheet(wb, cliWS, 'Client Data');
+
+    XLSX.writeFile(wb, 'JHS_Dashboard_Current_Data.xlsx');
+    btn.textContent = '✅ Downloaded!';
+    setTimeout(()=>{ btn.textContent = origText; btn.disabled = false; }, 3000);
+
+  } catch(err) {
+    alert('❌ ' + err.message);
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+// ─── HELPERS ──────────────────────────────────────────────
+function showSB(id, type, msg){
+  document.getElementById(id).innerHTML = `<div class="sb ${type}">${msg}</div>`;
+}
+function setStep(n){
+  for(let i=1;i<=4;i++){
+    const s = document.getElementById('s'+i);
+    s.className = 'step' + (i<n?' done': i===n?' active':'');
+  }
+}
+loadGHSettings();
+</script>
+</body>
+</html>
